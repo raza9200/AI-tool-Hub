@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Tools Hub{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <nav class="nav">
+                <div class="logo">
+                    <i class="fas fa-robot"></i>
+                    AI Tools Hub
+                </div>
+                <div class="nav-buttons" id="navButtons">
+                    {% if session.user_id %}
+                        <span class="user-welcome">Welcome, {{ session.user_name }}!</span>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Dashboard</a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-primary">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-secondary">Login</a>
+                        <a href="{{ url_for('signup') }}" class="btn btn-primary">Sign Up</a>
+                    {% endif %}
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

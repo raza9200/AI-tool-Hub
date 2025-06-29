@@ -1,0 +1,723 @@
+# Flask Templates for AI Tools Application
+
+## Folder Structure Required:
+```
+your_project/
+├── app.py
+├── ai_tools.db (will be created automatically)
+└── templates/
+    ├── base.html
+    ├── index.html
+    ├── login.html
+    ├── signup.html
+    ├── dashboard.html
+    ├── tool.html
+    ├── history.html
+    └── profile.html
+```
+
+## 1. Create `templates/base.html`:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Tools Platform{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .card {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: none;
+            border-radius: 15px;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 30px;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-robot"></i> AI Tools
+            </a>
+            
+            {% if session.user_id %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                            <i class="fas fa-home"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="toolsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-tools"></i> Tools
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('tool_page', tool_name='text-generator') }}">Text Generator</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('tool_page', tool_name='text-summarizer') }}">Text Summarizer</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('tool_page', tool_name='code-generator') }}">Code Generator</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('tool_page', tool_name='language-translator') }}">Language Translator</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('history') }}">
+                            <i class="fas fa-history"></i> History
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> {{ session.user_name }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('profile') }}">Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            {% else %}
+            <div class="navbar-nav">
+                <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                <a class="nav-link" href="{{ url_for('signup') }}">Sign Up</a>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+```
+
+## 2. Create `templates/index.html`:
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Welcome - AI Tools Platform{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+        <div class="col-lg-8 text-center">
+            <div class="card p-5">
+                <h1 class="display-4 text-primary mb-4">
+                    <i class="fas fa-robot"></i> AI Tools Platform
+                </h1>
+                <p class="lead mb-4">
+                    Transform your ideas with the power of Artificial Intelligence. 
+                    Generate text, summarize content, create code, and translate languages 
+                    - all in one powerful platform.
+                </p>
+                
+                <div class="row mt-5">
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-pen-fancy fa-3x text-primary mb-3"></i>
+                            <h5>Text Generator</h5>
+                            <p class="small">Create engaging content</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-compress-alt fa-3x text-success mb-3"></i>
+                            <h5>Text Summarizer</h5>
+                            <p class="small">Summarize long texts</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-code fa-3x text-warning mb-3"></i>
+                            <h5>Code Generator</h5>
+                            <p class="small">Generate clean code</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-language fa-3x text-info mb-3"></i>
+                            <h5>Translator</h5>
+                            <p class="small">Translate languages</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5">
+                    <a href="{{ url_for('signup') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-user-plus"></i> Get Started
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+```
+
+## 3. Create `templates/login.html`:
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Login - AI Tools Platform{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-4">
+                <div class="text-center mb-4">
+                    <h2><i class="fas fa-sign-in-alt text-primary"></i> Login</h2>
+                    <p class="text-muted">Welcome back to AI Tools</p>
+                </div>
+
+                <form method="POST" id="loginForm">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="remember">
+                        <label class="form-check-label" for="remember">Remember me</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mb-3">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                </form>
+
+                <div class="text-center">
+                    <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign up here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+```
+
+## 4. Create `templates/signup.html`:
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Sign Up - AI Tools Platform{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+        <div class="col-md-6 col-lg-5">
+            <div class="card p-4">
+                <div class="text-center mb-4">
+                    <h2><i class="fas fa-user-plus text-primary"></i> Create Account</h2>
+                    <p class="text-muted">Join AI Tools Platform</p>
+                </div>
+
+                <form method="POST" id="signupForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="contact" class="form-label">Phone Number (Optional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                            <input type="text" class="form-control" id="contact" name="contact">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mb-3">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </button>
+                </form>
+
+                <div class="text-center">
+                    <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+```
+
+## 5. Create `templates/dashboard.html`:
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AI Tools Platform{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="text-white mb-4">
+                <i class="fas fa-tachometer-alt"></i> Welcome back, {{ user.name }}!
+            </h1>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-robot fa-2x text-primary mb-2"></i>
+                    <h5>Total Requests</h5>
+                    <h3 class="text-primary">{{ user.requests|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-calendar fa-2x text-success mb-2"></i>
+                    <h5>Member Since</h5>
+                    <p class="mb-0">{{ user.created_at.strftime('%B %Y') }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-star fa-2x text-warning mb-2"></i>
+                    <h5>Account Status</h5>
+                    <span class="badge bg-success">Active</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-tools fa-2x text-info mb-2"></i>
+                    <h5>Available Tools</h5>
+                    <h3 class="text-info">4</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Tools -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="text-white mb-3"><i class="fas fa-tools"></i> AI Tools</h3>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-pen-fancy fa-3x text-primary mb-3"></i>
+                    <h5>Text Generator</h5>
+                    <p>Generate creative and engaging text content</p>
+                    <a href="{{ url_for('tool_page', tool_name='text-generator') }}" class="btn btn-primary">
+                        Use Tool
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-compress-alt fa-3x text-success mb-3"></i>
+                    <h5>Text Summarizer</h5>
+                    <p>Summarize long texts into concise content</p>
+                    <a href="{{ url_for('tool_page', tool_name='text-summarizer') }}" class="btn btn-success">
+                        Use Tool
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-code fa-3x text-warning mb-3"></i>
+                    <h5>Code Generator</h5>
+                    <p>Generate clean and efficient code</p>
+                    <a href="{{ url_for('tool_page', tool_name='code-generator') }}" class="btn btn-warning">
+                        Use Tool
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-language fa-3x text-info mb-3"></i>
+                    <h5>Language Translator</h5>
+                    <p>Translate text between different languages</p>
+                    <a href="{{ url_for('tool_page', tool_name='language-translator') }}" class="btn btn-info">
+                        Use Tool
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    {% if recent_requests %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-history"></i> Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    {% for request in recent_requests %}
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <div>
+                            <strong>{{ request.tool_type.replace('-', ' ').title() }}</strong>
+                            <p class="mb-0 text-muted small">
+                                {{ request.input_text[:100] }}{% if request.input_text|length > 100 %}...{% endif %}
+                            </p>
+                        </div>
+                        <small class="text-muted">{{ request.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </div>
+                    {% endfor %}
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('history') }}" class="btn btn-outline-primary">View All History</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+```
+
+## 6. Create `templates/tool.html`:
+
+```html
+{% extends "base.html" %}
+
+{% block title %}{{ tool_name.replace('-', ' ').title() }} - AI Tools Platform{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-tools"></i> {{ tool_name.replace('-', ' ').title() }}</h3>
+                </div>
+                <div class="card-body">
+                    <form id="aiToolForm">
+                        <div class="mb-3">
+                            <label for="inputText" class="form-label">Enter your text:</label>
+                            <textarea class="form-control" id="inputText" name="input_text" rows="5" 
+                                placeholder="Enter your text here..." required></textarea>
+                        </div>
+
+                        {% if tool_name == 'language-translator' %}
+                        <div class="mb-3">
+                            <label for="targetLanguage" class="form-label">Target Language:</label>
+                            <select class="form-select" id="targetLanguage" name="target_language">
+                                <option value="spanish">Spanish</option>
+                                <option value="french">French</option>
+                                <option value="german">German</option>
+                                <option value="urdu">Urdu</option>
+                            </select>
+                        </div>
+                        {% endif %}
+
+                        <button type="submit" class="btn btn-primary" id="processBtn">
+                            <i class="fas fa-play"></i> Process
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="clearForm()">
+                            <i class="fas fa-trash"></i> Clear
+                        </button>
+                    </form>
+
+                    <div id="result" class="mt-4" style="display: none;">
+                        <h5>Result:</h5>
+                        <div class="card">
+                            <div class="card-body">
+                                <pre id="output" style="white-space: pre-wrap; word-wrap: break-word;"></pre>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary mt-2" onclick="copyResult()">
+                            <i class="fas fa-copy"></i> Copy Result
+                        </button>
+                    </div>
+
+                    <div id="loading" class="text-center mt-4" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Processing your request...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('aiToolForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        tool_type: '{{ tool_name }}',
+        input_text: formData.get('input_text'),
+        target_language: formData.get('target_language') || 'spanish'
+    };
+
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('processBtn').disabled = true;
+
+    try {
+        const response = await fetch('/api/process-ai', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            document.getElementById('output').textContent = result.output;
+            document.getElementById('result').style.display = 'block';
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        alert('Error processing request: ' + error.message);
+    } finally {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('processBtn').disabled = false;
+    }
+});
+
+function clearForm() {
+    document.getElementById('inputText').value = '';
+    document.getElementById('result').style.display = 'none';
+}
+
+function copyResult() {
+    const output = document.getElementById('output').textContent;
+    navigator.clipboard.writeText(output).then(() => {
+        alert('Result copied to clipboard!');
+    });
+}
+</script>
+{% endblock %}
+```
+
+## 7. Create `templates/history.html`:
+
+```html
+{% extends "base.html" %}
+
+{% block title %}History - AI Tools Platform{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3><i class="fas fa-history"></i> Request History</h3>
+                    <span class="badge bg-primary">{{ requests|length }} Total Requests</span>
+                </div>
+                <div class="card-body">
+                    {% if requests %}
+                        {% for request in requests %}
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between">
+                                <span class="badge bg-secondary">{{ request.tool_type.replace('-', ' ').title() }}</span>
+                                <small class="text-muted">{{ request.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                            </div>
+                            <div class="card-body">
+                                <h6>Input:</h6>
+                                <p class="text-muted">{{ request.input_text }}</p>
+                                <h6>Output:</h6>
+                                <pre style="white-space: pre-wrap; word-wrap: break-word; max-height: 200px; overflow-y: auto;">{{ request.output_text }}</pre>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5>No requests yet</h5>
+                            <p class="text-muted">Start using AI tools to see your history here</p>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+```
+
+## 8. Create `templates/profile.html`:
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Profile - AI Tools Platform{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-user"></i> User Profile</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-user-circle fa-5x text-primary"></i>
+                            </div>
+                            <h4>{{ user.name }}</h4>
+                            <p class="text-muted">@{{ user.username }}</p>
+                        </div>
+                        <div class="col-md-8">
+                            <h5>Account Information</h5>
+                            <table class="table">
+                                <tr>
+                                    <td><strong>Full Name:</strong></td>
+                                    <td>{{ user.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Username:</strong></td>
+                                    <td>{{ user.username }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td>{{ user.email }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Contact:</strong></td>
+                                    <td>{{ user.contact or 'Not provided' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Member Since:</strong></td>
+                                    <td>{{ user.created_at.strftime('%B %d, %Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Requests:</strong></td>
+                                    <td>{{ user.requests|length }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+```
+

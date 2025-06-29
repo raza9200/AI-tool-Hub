@@ -1,0 +1,232 @@
+<!-- {% extends "base.html" %}
+
+{% block title %}{{ tool_name.replace('-', ' ').title() }} - AI Tools Hub{% endblock %}
+
+{% block content %}
+<div class="tool-container">
+    <div class="tool-header">
+        <div class="breadcrumb">
+            <a href="{{ url_for('dashboard') }}" class="breadcrumb-link">
+                <i class="fas fa-home"></i>
+                Dashboard
+            </a>
+            <i class="fas fa-chevron-right"></i>
+            <span class="breadcrumb-current">{{ tool_name.replace('-', ' ').title() }}</span>
+        </div>
+        
+        <div class="tool-title-section">
+            <div class="tool-icon-large">
+                {% if tool_name == 'text-generator' %}
+                    <i class="fas fa-pen-fancy"></i>
+                {% elif tool_name == 'text-summarizer' %}
+                    <i class="fas fa-compress-alt"></i>
+                {% elif tool_name == 'code-generator' %}
+                    <i class="fas fa-code"></i>
+                {% else %}
+                    <i class="fas fa-language"></i>
+                {% endif %}
+            </div>
+            <div class="tool-info">
+                <h1 class="tool-title">{{ tool_name.replace('-', ' ').title() }}</h1>
+                <p class="tool-subtitle">
+                    {% if tool_name == 'text-generator' %}
+                        Generate creative and engaging text content using advanced AI
+                    {% elif tool_name == 'text-summarizer' %}
+                        Summarize long documents into concise, meaningful summaries
+                    {% elif tool_name == 'code-generator' %}
+                        Generate clean, efficient code with explanations
+                    {% else %}
+                        Translate text between multiple languages accurately
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="tool-workspace">
+        <div class="input-section">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fas fa-edit"></i>
+                    Input
+                </h3>
+                <div class="input-controls">
+                    <button class="btn btn-secondary btn-small" onclick="clearInput()">
+                        <i class="fas fa-eraser"></i>
+                        Clear
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="pasteFromClipboard()">
+                        <i class="fas fa-paste"></i>
+                        Paste
+                    </button>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <textarea id="inputText" placeholder="{{ get_placeholder(tool_name) }}" rows="8"></textarea>
+                
+                {% if tool_name == 'language-translator' %}
+                <div class="translation-controls">
+                    <div class="language-selector">
+                        <label for="targetLanguage">Translate to:</label>
+                        <select id="targetLanguage">
+                            <option value="spanish">Spanish (Español)</option>
+                            <option value="french">French (Français)</option>
+                            <option value="german">German (Deutsch)</option>
+                            <option value="urdu">Urdu (اردو)</option>
+                            <option value="arabic">Arabic (العربية)</option>
+                            <option value="chinese">Chinese (中文)</option>
+                            <option value="japanese">Japanese (日本語)</option>
+                            <option value="korean">Korean (한국어)</option>
+                        </select>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="input-footer">
+                    <div class="input-stats">
+                        <span id="charCount">0 characters</span>
+                        <span id="wordCount">0 words</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="processAI()" id="processBtn">
+                        <i class="fas fa-magic"></i>
+                        {% if tool_name == 'text-generator' %}Generate Text
+                        {% elif tool_name == 'text-summarizer' %}Summarize
+                        {% elif tool_name == 'code-generator' %}Generate Code
+                        {% else %}Translate{% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="output-section">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fas fa-lightbulb"></i>
+                    Output
+                </h3>
+                <div class="output-controls">
+                    <button class="btn btn-secondary btn-small" onclick="copyOutput()" id="copyBtn">
+                        <i class="fas fa-copy"></i>
+                        Copy
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="downloadOutput()">
+                        <i class="fas fa-download"></i>
+                        Download
+                    </button>
+                </div>
+            </div>
+            
+            <div class="output-area">
+                <div id="outputContent" class="output-content">
+                    <div class="output-placeholder">
+                        <i class="fas fa-arrow-up"></i>
+                        <p>Your AI-generated content will appear here</p>
+                        <small>Enter your text above and click the process button to get started</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tool-sidebar">
+        <div class="sidebar-section">
+            <h4 class="sidebar-title">Quick Tips</h4>
+            <div class="tips-list">
+                {% if tool_name == 'text-generator' %}
+                    <div class="tip-item">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>Be specific about the type of content you want</span>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-target"></i>
+                        <span>Mention your target audience</span>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-palette"></i>
+                        <span>Specify the tone and style</span>
+                    </div>
+                {% elif tool_name == 'text-summarizer' %}
+                    <div class="tip-item">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Paste longer texts for better summaries</span>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-bullseye"></i>
+                        <span>Works best with structured content</span>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-list"></i>
+                        <span>Great for articles, reports, and documents</span>
+                    </div>
+                {% elif tool_name == 'code-generator' %}
+                    <div class="tip-item">
+                        <i class="fas fa-code"></i>
+                        <span>Describe the functionality clearly</span>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-cogs"></i>
+                        <span>Mention the programming language</span>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-book"></i>
+                        <span>Ask for comments and explanations</span>
+                    </div>
+                {% else %}
+                    <div class="tip-item">
+                        <i class="fas fa-globe"></i>
+                        <span>Supports 50+ languages</span>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-context-menu"></i>
+                        <span>Context-aware translations</span>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-spell-check"></i>
+                        <span>Handles idioms and expressions</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <h4 class="sidebar-title">Examples</h4>
+            <div class="examples-list">
+                {% if tool_name == 'text-generator' %}
+                    <div class="example-item" onclick="useExample('Write a blog post about artificial intelligence in healthcare')">
+                        "Write a blog post about artificial intelligence in healthcare"
+                    </div>
+                    <div class="example-item" onclick="useExample('Create a product description for a smart watch')">
+                        "Create a product description for a smart watch"
+                    </div>
+                {% elif tool_name == 'text-summarizer' %}
+                    <div class="example-item" onclick="useExample('Artificial intelligence (AI) is intelligence demonstrated by machines, in contrast to the natural intelligence displayed by humans and animals...')">
+                        Long article or document text
+                    </div>
+                {% elif tool_name == 'code-generator' %}
+                    <div class="example-item" onclick="useExample('Create a Python function to calculate fibonacci numbers')">
+                        "Create a Python function to calculate fibonacci numbers"
+                    </div>
+                    <div class="example-item" onclick="useExample('Write JavaScript code to validate email addresses')">
+                        "Write JavaScript code to validate email addresses"
+                    </div>
+                {% else %}
+                    <div class="example-item" onclick="useExample('Hello, how are you today?')">
+                        "Hello, how are you today?"
+                    </div>
+                    <div class="example-item" onclick="useExample('Thank you for your help')">
+                        "Thank you for your help"
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const toolName = '{{ tool_name }}';
+
+// Initialize
+document. -->
