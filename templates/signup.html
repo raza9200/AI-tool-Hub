@@ -464,7 +464,7 @@
                 <p class="auth-subtitle">Join thousands of users leveraging AI power</p>
             </div>
             
-            <form id="signupForm" class="auth-form">
+            <form id="signupForm" action={{ url_for("signup") }} method="post" class="auth-form">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="firstName">First Name</label>

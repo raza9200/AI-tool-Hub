@@ -23,13 +23,9 @@ with app.app_context():
     db.create_all()
 
 # Home redirect to login
-@app.route('/home')
+@app.route('/')
 def home():
-    if 'user_id' not in session:
-        flash('Please log in first.', 'warning')
-        return redirect(url_for('login'))
-
-    return render_template('login.html', name=session['user_name'])
+    return render_template('dashbard.html')
 
 # Signup Route
 @app.route('/signup', methods=['GET', 'POST'])
@@ -39,12 +35,18 @@ def signup():
         email = request.form['email']
         password = request.form['password']
 
+        print(name)
+        print(email)
+        print(password)
+
         if User.query.filter_by(email=email).first():
             flash('Email already registered!', 'warning')
             return redirect(url_for('signup'))
 
         password_hash = generate_password_hash(password)
         new_user = User(name=name, email=email, password_hash=password_hash)
+
+        print(new_user.email)
 
         db.session.add(new_user)
         db.session.commit()
@@ -66,7 +68,7 @@ def login():
             session['user_id'] = user.id
             session['user_name'] = user.name
             flash('Login successful!', 'success')
-            return redirect(url_for('home'))
+            return redirect(url_for('dashboard.html'))
         else:
             flash('Invalid credentials!', 'danger')
             return redirect(url_for('login'))
